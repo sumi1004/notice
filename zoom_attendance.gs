@@ -66,6 +66,22 @@ function testListInstances() {
   Logger.log(r.body);
 }
 
+// ── 자동화: 각 회차 당일 20:00에 syncAttendance 예약 (1회만 실행) ──
+function setupAttendanceTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === "syncAttendance") ScriptApp.deleteTrigger(t);
+  });
+  var made = 0;
+  Object.keys(ATT_DATES).forEach(function (d) {
+    var when = new Date(d + "T20:00:00+09:00");   // 회차 끝나고 Zoom 리포트 준비된 뒤
+    if (when.getTime() > Date.now()) {
+      ScriptApp.newTrigger("syncAttendance").timeBased().at(when).create();
+      made++;
+    }
+  });
+  Logger.log("출석 동기화 트리거: " + made + "개");
+}
+
 // ── 메인: 출석 동기화 ──
 function syncAttendance() {
   var token = getZoomToken_();
