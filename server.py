@@ -36,6 +36,9 @@ MAIL_FROM_NAME = os.environ.get("MAIL_FROM_NAME", "호서대 AI 워크숍")
 LIVE_LINK = os.environ.get("LIVE_LINK", "https://www.youtube.com")
 SCHEDULE_TEXT = os.environ.get("SCHEDULE_TEXT", "매주 토요일 오후 3시 (2026.6.6 ~ 8.15, 총 11회)")
 MEETING_ID = os.environ.get("MEETING_ID", "848 6459 9988")
+# Google Apps Script 웹앱 URL: 시트 기록 + 이메일 발송(MailApp)을 Google에 위임
+# (Railway가 SMTP를 차단하므로 메일은 이 웹훅으로 처리)
+SHEET_WEBHOOK_URL = os.environ.get("SHEET_WEBHOOK_URL", "")
 
 
 # ── Supabase 저장 ────────────────────────────────────────────
@@ -110,10 +113,33 @@ def send_email(to_email, name, link):
         return False, f"{type(e).__name__}: {e}"
 
 
-def _send_email_bg(to_email, name):
-    """이메일을 백그라운드로 발송(폼 응답 지연 방지)하고 결과만 로그."""
-    ok, info = send_email(to_email, name, LIVE_LINK)
-    print(f"[메일] {to_email} -> {ok} ({info})", flush=True)
+def notify_webhook(name, phone, email):
+    """Apps Script 웹앱으로 신청정보 전송 → 구글시트 기록 + 이메일 발송(MailApp).
+    Railway가 SMTP를 차단하므로 메일 발송을 Google(Apps Script)에 위임한다."""
+    if not SHEET_WEBHOOK_URL:
+        return False, "웹훅 미설정"
+    payload = json.dumps({
+        "name": name, "phone": phone, "email": email,
+        "link": LIVE_LINK, "schedule": SCHEDULE_TEXT, "meetingId": MEETING_ID,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        SHEET_WEBHOOK_URL, data=payload, method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return True, f"status {r.status}"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {e}"
+
+
+def _notify_bg(name, phone, email):
+    """백그라운드: 웹훅(시트+메일) 호출. 웹훅 미설정 시(로컬 등) SMTP로 폴백."""
+    ok, info = notify_webhook(name, phone, email)
+    print(f"[웹훅] {email} -> {ok} ({info})", flush=True)
+    if not SHEET_WEBHOOK_URL and GMAIL_USER and GMAIL_APP_PASSWORD:
+        ok2, info2 = send_email(email, name, LIVE_LINK)
+        print(f"[메일-폴백] {email} -> {ok2} ({info2})", flush=True)
 
 
 # ── 페이지 ───────────────────────────────────────────────────
@@ -186,10 +212,10 @@ class H(BaseHTTPRequestHandler):
         phone = (data.get("phone", [""])[0]).strip()
         email = (data.get("email", [""])[0]).strip()
         saved, detail = save_application(name, phone, email)
-        # 이메일은 백그라운드 스레드로 발송 → 폼은 즉시 응답
+        # 시트기록+이메일은 백그라운드(웹훅)로 → 폼은 즉시 응답
         if email:
-            threading.Thread(target=_send_email_bg, args=(email, name), daemon=True).start()
-        print(f"[신청] {name}/{email} -> save {saved}({detail}) | mail: background", flush=True)
+            threading.Thread(target=_notify_bg, args=(name, phone, email), daemon=True).start()
+        print(f"[신청] {name}/{email} -> save {saved}({detail}) | notify: background", flush=True)
         self._send(result_html(saved, True, name, detail))
 
     def log_message(self, *a):
