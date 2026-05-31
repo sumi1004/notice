@@ -16,6 +16,7 @@
 """
 import json
 import os
+import re
 import smtplib
 import ssl
 import threading
@@ -39,6 +40,20 @@ MEETING_ID = os.environ.get("MEETING_ID", "848 6459 9988 (암호 : 1)")
 # Google Apps Script 웹앱 URL: 시트 기록 + 이메일 발송(MailApp)을 Google에 위임
 # (Railway가 SMTP를 차단하므로 메일은 이 웹훅으로 처리)
 SHEET_WEBHOOK_URL = os.environ.get("SHEET_WEBHOOK_URL", "")
+
+
+# ── 휴대폰 번호 정규화 ────────────────────────────────────────
+def normalize_phone(p):
+    """숫자만 추출 → 앞 0 보정 → 010-XXXX-XXXX 형식(텍스트)로.
+    시트에서 앞 0이 사라지는 문제 방지 + 하이픈 자동 부여."""
+    d = re.sub(r"\D", "", p or "")
+    if len(d) == 10 and d.startswith("10"):   # 0이 빠진 010 → 보정
+        d = "0" + d
+    if len(d) == 11 and d.startswith("01"):   # 01012345678
+        return f"{d[:3]}-{d[3:7]}-{d[7:]}"
+    if len(d) == 10 and d.startswith("01"):    # 011/016 등 구형
+        return f"{d[:3]}-{d[3:6]}-{d[6:]}"
+    return (p or "").strip()                   # 형식 불명: 원본 유지
 
 
 # ── Supabase 저장 ────────────────────────────────────────────
@@ -209,7 +224,7 @@ class H(BaseHTTPRequestHandler):
             text = raw.decode("utf-8", "replace")
         data = urllib.parse.parse_qs(text)
         name = (data.get("name", [""])[0]).strip()
-        phone = (data.get("phone", [""])[0]).strip()
+        phone = normalize_phone((data.get("phone", [""])[0]).strip())
         email = (data.get("email", [""])[0]).strip()
         saved, detail = save_application(name, phone, email)
         # 시트기록+이메일은 백그라운드(웹훅)로 → 폼은 즉시 응답
