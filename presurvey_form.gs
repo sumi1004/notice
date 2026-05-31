@@ -5,6 +5,8 @@
 
 var LIKERT_COLS = ["1", "2", "3", "4", "5"];
 var LIKERT_LEGEND = "1=전혀 그렇지 않다  2=그렇지 않다  3=보통이다  4=그렇다  5=매우 그렇다";
+// 폼 상단 배너 이미지(가로형 권장). 다른 이미지로 바꾸려면 공개 이미지 URL로 교체.
+var BANNER_URL = "https://raw.githubusercontent.com/sumi1004/notice/main/banner.png";
 
 var FACTORS = [
   { title: "Ⅱ. 논문작성 자기효능감", rows: [
@@ -52,11 +54,24 @@ var FACTORS = [
 function buildPreSurvey() {
   var form = FormApp.create("[호서대 벤처대학원] 2026 AI 활용 논문작성법 사전 설문");
   form.setDescription(
-    "본 설문은 워크숍 사전 진단 및 수업 실습(데이터 분석)에 활용됩니다. " +
-    "정답이 없으니 평소 생각대로 솔직히 응답해 주세요. (약 7~10분)\n" +
-    "리커트 척도: " + LIKERT_LEGEND);
+    "안녕하세요. 「2026 AI 활용 논문작성법」 워크숍에 참여해 주셔서 진심으로 감사합니다.\n\n" +
+    "본 사전 설문은 두 가지 목적으로 활용됩니다.\n" +
+    "① 수강생 여러분의 현재 수준과 요구를 파악하여, 첫 시간부터 수업 내용을 맞춤형으로 설계하는 데 사용합니다.\n" +
+    "② 수업 중 '연구방법·통계분석' 실습에서 여러분이 직접 분석·해석하는 실제 연구 데이터로 사용됩니다. (내 응답이 곧 실습 자료가 됩니다)\n\n" +
+    "정답이 없는 문항이므로, 평소 생각대로 솔직하게 응답해 주시면 됩니다. " +
+    "응답 내용은 연구·교육 목적 외에는 사용되지 않으며, 개인을 식별하지 않는 통계 형태로만 처리됩니다.\n\n" +
+    "▸ 소요 시간: 약 7~10분\n" +
+    "▸ 리커트 척도 안내: " + LIKERT_LEGEND);
   form.setProgressBar(true);
   form.setCollectEmail(false);
+
+  // ── 상단 배너 이미지 ──
+  try {
+    var banner = UrlFetchApp.fetch(BANNER_URL).getBlob();
+    form.addImageItem().setImage(banner).setTitle("2026 AI 활용 논문작성법 워크숍");
+  } catch (e) {
+    Logger.log("배너 이미지 로드 실패(무시하고 진행): " + e);
+  }
 
   // ── Part 1. 일반 사항 ──
   form.addSectionHeaderItem().setTitle("Ⅰ. 일반 사항");
@@ -89,6 +104,18 @@ function buildPreSurvey() {
   form.addParagraphTextItem().setTitle("O1. 이 워크숍에서 가장 배우고 싶은 것은 무엇인가요?").setRequired(true);
   form.addParagraphTextItem().setTitle("O2. 현재 논문작성 또는 AI 활용에서 가장 어려운 점은 무엇인가요?").setRequired(true);
   form.addParagraphTextItem().setTitle("O3. 워크숍에 바라는 점이 있다면 자유롭게 적어주세요. (선택)");
+
+  // ── 개인정보 수집·이용 동의 (맨 마지막) ──
+  form.addSectionHeaderItem().setTitle("Ⅺ. 개인정보 수집·이용 동의");
+  form.addMultipleChoiceItem()
+    .setTitle("개인정보 수집·이용에 동의하시나요? (미동의 시 설문 참여가 제한됩니다)")
+    .setHelpText(
+      "▸ 수집 항목: 이름, 이메일, 소속(학과/기관)\n" +
+      "▸ 수집·이용 목적: 워크숍 사전 진단, 수업 실습(데이터 분석) 자료, 워크숍 안내 및 자료 전달\n" +
+      "▸ 보유·이용 기간: 워크숍 종료 후 1년까지 보관 후 파기\n" +
+      "▸ 동의를 거부할 권리가 있으나, 미동의 시 설문 참여 및 워크숍 안내가 제한될 수 있습니다.")
+    .setChoiceValues(["네, 동의합니다"])
+    .setRequired(true);
 
   // ── 응답 스프레드시트 생성·연결 ──
   var ss = SpreadsheetApp.create("사전설문_응답_2026AI논문작성법");
