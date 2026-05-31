@@ -157,7 +157,7 @@ input{width:100%;padding:12px;border:1px solid #2a3350;border-radius:8px;backgro
 button{width:100%;margin-top:22px;padding:14px;border:0;border-radius:10px;background:#ffe14d;color:#1a1a1a;font-weight:700;font-size:15px;cursor:pointer}
 .tag{display:inline-block;background:#243b8a;color:#cfe0ff;font-size:11px;padding:3px 8px;border-radius:6px;margin-bottom:12px}
 </style></head><body><div class=card>
-<span class=tag>무료 실전 워크숍 · 8주 완성</span>
+<span class=tag>실전 워크숍 · 8주 완성</span>
 <h1>호서대 2026 AI 활용 8주 완성 실전 워크숍</h1>
 <p class=sub>신청하시면 입력하신 이메일로 1주차 라이브 링크를 자동 발송해 드립니다.</p>
 <form method=post action=/apply>
