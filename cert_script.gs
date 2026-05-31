@@ -19,28 +19,37 @@ var CERT = {
 
 function certHtml_(name, number) {
   var seal = CERT.sealImageUrl
-    ? '<img src="' + CERT.sealImageUrl + '" style="width:70px;height:70px;vertical-align:middle;margin-left:10px">'
+    ? '<img src="' + CERT.sealImageUrl + '" style="width:72px;height:72px;vertical-align:middle;margin-left:12px">'
     : '';
   var numHtml = number
-    ? '<div style="text-align:right;font-size:12px;color:#555;letter-spacing:1px">제 ' + number + ' 호</div>'
+    ? '<div style="position:absolute;top:18px;right:30px;font-size:13px;color:#555;letter-spacing:1px;">제 ' + number + ' 호</div>'
     : '';
   var issuerName = CERT.issuerName ? '&nbsp;&nbsp;' + CERT.issuerName : '';
+  var FONT = "Gungsuh, GungsuhChe, '궁서', '궁서체', Batang, serif";
+  // 코너 문양(❦) — 두꺼운 금색 테두리의 네 모서리
+  function corner(pos) {
+    return '<span style="position:absolute;' + pos + 'font-size:40px;line-height:1;color:#b8902f;">❦</span>';
+  }
   return '' +
-  '<div style="width:700px;margin:0 auto;padding:54px;box-sizing:border-box;font-family:Batang,Gungsuh,serif;">' +
-  '  <div style="border:6px double #b8902f;padding:46px 50px;">' +
-       numHtml +
-  '    <div style="text-align:center;font-size:46px;font-weight:700;letter-spacing:24px;color:#1a1a1a;margin:26px 0 46px;padding-left:24px;">' + CERT.title + '</div>' +
-  '    <table style="margin:0 auto 30px;font-size:18px;color:#222;line-height:2.4;border-collapse:collapse;">' +
-  '      <tr><td style="padding-right:26px;color:#555;white-space:nowrap;">성&nbsp;&nbsp;&nbsp;&nbsp;명</td><td style="font-weight:700;">' + name + '</td></tr>' +
-  '      <tr><td style="padding-right:26px;color:#555;white-space:nowrap;">과 정 명</td><td>' + CERT.org + '<br>' + CERT.course + '</td></tr>' +
-  '      <tr><td style="padding-right:26px;color:#555;white-space:nowrap;">교육기간</td><td>' + CERT.period + '</td></tr>' +
-  '    </table>' +
-  '    <div style="text-align:center;font-size:19px;color:#222;line-height:2;margin:40px 0 50px;">' +
-  '      위 사람은 위 과정을 성실히 이수하였기에<br>이 증서를 수여합니다.' +
-  '    </div>' +
-  '    <div style="text-align:center;font-size:18px;color:#222;margin:34px 0;">' + CERT.issueDate + '</div>' +
-  '    <div style="text-align:center;font-size:21px;font-weight:700;color:#1a1a1a;margin-top:30px;">' +
-         CERT.issuer + issuerName + seal +
+  '<div style="width:700px;margin:0 auto;padding:46px;box-sizing:border-box;font-family:' + FONT + ';font-weight:bold;">' +
+  '  <div style="position:relative;border:8px solid #b8902f;padding:10px;">' +
+         corner('top:-26px;left:-22px;') + corner('top:-26px;right:-22px;') +
+         corner('bottom:-30px;left:-22px;') + corner('bottom:-30px;right:-22px;') +
+  '    <div style="position:relative;border:2px solid #c9a85a;padding:46px 50px;">' +
+           numHtml +
+  '      <div style="text-align:center;font-size:48px;letter-spacing:26px;color:#1a1a1a;margin:26px 0 46px;padding-left:26px;">' + CERT.title + '</div>' +
+  '      <table style="margin:0 auto 30px;font-size:19px;color:#222;line-height:2.4;border-collapse:collapse;">' +
+  '        <tr><td style="padding-right:28px;color:#555;white-space:nowrap;">성&nbsp;&nbsp;&nbsp;&nbsp;명</td><td>' + name + '</td></tr>' +
+  '        <tr><td style="padding-right:28px;color:#555;white-space:nowrap;">과 정 명</td><td>' + CERT.org + '<br>' + CERT.course + '</td></tr>' +
+  '        <tr><td style="padding-right:28px;color:#555;white-space:nowrap;">교육기간</td><td>' + CERT.period + '</td></tr>' +
+  '      </table>' +
+  '      <div style="text-align:center;font-size:20px;color:#222;line-height:2;margin:40px 0 50px;">' +
+  '        위 사람은 위 과정을 성실히 이수하였기에<br>이 증서를 수여합니다.' +
+  '      </div>' +
+  '      <div style="text-align:center;font-size:19px;color:#222;margin:34px 0;">' + CERT.issueDate + '</div>' +
+  '      <div style="text-align:center;font-size:23px;color:#1a1a1a;margin-top:30px;">' +
+           CERT.issuer + issuerName + seal +
+  '      </div>' +
   '    </div>' +
   '  </div>' +
   '</div>';
