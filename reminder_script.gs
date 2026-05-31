@@ -17,7 +17,7 @@ var WORKSHOP_DATES = {
   "2026-08-01": "7주차",
   "2026-08-08": "8주차"
 };
-var REMIND_HHMM = "15:20:00";  // 발송 시각(15:30 시작 10분 전)
+var REMIND_HHMM = "15:00:00";  // 발송 시각(15:30 시작 30분 전)
 var ZOOM_LINK = "https://us06web.zoom.us/j/84864599988?pwd=oUBPD7bEP0A39b10Ezw9ibbVFopeuS.1";
 
 // ── 1회만 실행: 8개 날짜에 발송 예약 트리거 생성 ──
