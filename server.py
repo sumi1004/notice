@@ -18,6 +18,7 @@ import json
 import os
 import smtplib
 import ssl
+import threading
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -53,7 +54,7 @@ def save_application(name, phone, email):
         },
     )
     try:
-        with urllib.request.urlopen(req) as r:
+        with urllib.request.urlopen(req, timeout=10) as r:
             return (r.status in (200, 201)), f"status {r.status}"
     except urllib.error.HTTPError as e:
         return False, f"{e.code}: {e.read().decode('utf-8')[:200]}"
@@ -101,12 +102,18 @@ def send_email(to_email, name, link):
     msg.attach(MIMEText(email_html(name, link), "html", "utf-8"))
     try:
         ctx = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ctx) as s:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ctx, timeout=20) as s:
             s.login(GMAIL_USER, GMAIL_APP_PASSWORD)
             s.sendmail(GMAIL_USER, [to_email], msg.as_string())
         return True, "sent"
     except Exception as e:
         return False, f"{type(e).__name__}: {e}"
+
+
+def _send_email_bg(to_email, name):
+    """이메일을 백그라운드로 발송(폼 응답 지연 방지)하고 결과만 로그."""
+    ok, info = send_email(to_email, name, LIVE_LINK)
+    print(f"[메일] {to_email} -> {ok} ({info})", flush=True)
 
 
 # ── 페이지 ───────────────────────────────────────────────────
@@ -138,7 +145,7 @@ button{width:100%;margin-top:22px;padding:14px;border:0;border-radius:10px;backg
 
 def result_html(saved, mailed, name, detail):
     s_line = "✅ 신청 명단 저장 완료" if saved else f"⚠️ 저장 실패 — {detail}"
-    m_line = "✅ 안내 이메일 발송 완료" if mailed else "ℹ️ 이메일 미발송(설정 확인)"
+    m_line = "📧 안내 이메일을 발송했습니다 (잠시 후 메일함 확인)" if mailed else "ℹ️ 이메일 미발송(설정 확인)"
     return ("<!doctype html><html lang=ko><head><meta charset=utf-8>"
             "<style>body{font-family:'Malgun Gothic',sans-serif;background:#0b1020;color:#eee;"
             "display:flex;justify-content:center;padding:60px}.card{background:#161c2e;max-width:460px;"
@@ -179,9 +186,11 @@ class H(BaseHTTPRequestHandler):
         phone = (data.get("phone", [""])[0]).strip()
         email = (data.get("email", [""])[0]).strip()
         saved, detail = save_application(name, phone, email)
-        mailed, minfo = send_email(email, name, LIVE_LINK)
-        print(f"[신청] {name}/{email} -> save {saved}({detail}) mail {mailed}({minfo})", flush=True)
-        self._send(result_html(saved, mailed, name, detail))
+        # 이메일은 백그라운드 스레드로 발송 → 폼은 즉시 응답
+        if email:
+            threading.Thread(target=_send_email_bg, args=(email, name), daemon=True).start()
+        print(f"[신청] {name}/{email} -> save {saved}({detail}) | mail: background", flush=True)
+        self._send(result_html(saved, True, name, detail))
 
     def log_message(self, *a):
         pass
