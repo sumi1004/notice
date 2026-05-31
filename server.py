@@ -33,6 +33,8 @@ GMAIL_USER = os.environ.get("GMAIL_USER", "")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
 MAIL_FROM_NAME = os.environ.get("MAIL_FROM_NAME", "호서대 AI 워크숍")
 LIVE_LINK = os.environ.get("LIVE_LINK", "https://www.youtube.com")
+SCHEDULE_TEXT = os.environ.get("SCHEDULE_TEXT", "매주 토요일 오후 3시 (2026.6.6 ~ 8.15, 총 11회)")
+MEETING_ID = os.environ.get("MEETING_ID", "848 6459 9988")
 
 
 # ── Supabase 저장 ────────────────────────────────────────────
@@ -70,10 +72,16 @@ def email_html(name, link):
     </div>
     <div style="padding:26px">
       <p style="font-size:15px;color:#222"><b>{name}</b>님, 안녕하세요.</p>
-      <p style="font-size:14px;color:#444;line-height:1.7">1주차 라이브 링크를 안내드립니다.<br>아래 버튼으로 입장하실 수 있습니다.</p>
-      <p style="text-align:center;margin:26px 0">
+      <p style="font-size:14px;color:#444;line-height:1.7">아래 일정으로 진행되는 라이브에 입장하실 수 있습니다.</p>
+      <div style="background:#f4f6fb;border-radius:10px;padding:16px 18px;margin:18px 0;font-size:13px;color:#333;line-height:2">
+        <div>📅 <b>일시</b> &nbsp; {SCHEDULE_TEXT}</div>
+        <div>💻 <b>방식</b> &nbsp; Zoom 온라인 라이브</div>
+        <div>🔗 <b>회의 ID</b> &nbsp; {MEETING_ID}</div>
+        <div>🔑 <b>입장</b> &nbsp; 아래 버튼 클릭 시 자동 입장(비밀번호 포함)</div>
+      </div>
+      <p style="text-align:center;margin:24px 0">
         <a href="{link}" style="display:inline-block;background:#ffe14d;color:#1a1a1a;font-weight:700;
-           text-decoration:none;padding:13px 26px;border-radius:10px;font-size:15px">▶ 라이브 입장하기</a>
+           text-decoration:none;padding:13px 26px;border-radius:10px;font-size:15px">▶ Zoom 라이브 입장하기</a>
       </p>
       <p style="font-size:12px;color:#888;line-height:1.6">버튼이 안 보이면 링크를 복사하세요:<br>{link}</p>
       <hr style="border:none;border-top:1px solid #eee;margin:22px 0">
